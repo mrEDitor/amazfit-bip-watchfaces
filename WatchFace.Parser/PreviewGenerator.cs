@@ -29,8 +29,9 @@ namespace WatchFace.Parser
         private static Image CreateFrame(IDrawable watchFace, Bitmap[] resources, WatchState state)
         {
             var preview = new Bitmap(176, 176);
-            var graphics = Graphics.FromImage(preview);
-            watchFace.Draw(graphics, resources, state);
+            SixLabors.ImageSharp.Processing.ProcessingExtensions.Mutate(preview, graphics =>
+                watchFace.Draw(graphics, resources, state)
+            );
             return preview;
         }
     }

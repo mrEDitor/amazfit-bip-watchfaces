@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Resources
-{
-    interface IResource
-    {
-
-    }
-}
+﻿// using System;
+// using System.Collections.Generic;
+// using System.Linq;
+// using System.Text;
+//
+// namespace Resources
+// {
+//     interface IResource
+//     {
+//
+//     }
+// }

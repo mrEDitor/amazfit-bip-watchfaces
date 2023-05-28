@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using NLog;
 using Resources.Models;
@@ -63,6 +64,11 @@ namespace Resources
                     _stream.Read(data, 0, length);
                     var blob = new Blob(data);
                     resources.Add(blob);
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(e, "Exception thrown while reading resources");
+                    break;
                 }
             }
 

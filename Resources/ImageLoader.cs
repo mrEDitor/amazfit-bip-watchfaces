@@ -69,10 +69,10 @@ namespace Resources
         private static Bitmap ApplyDithering(Bitmap image)
         {
             var clone = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
-            using (var gr = Graphics.FromImage(clone))
+            SixLabors.ImageSharp.Processing.ProcessingExtensions.Mutate(clone, gr =>
             {
                 gr.DrawImage(image, new Rectangle(0, 0, clone.Width, clone.Height));
-            }
+            });
 
             FloydSteinbergDitherer.Process(clone);
             return clone;

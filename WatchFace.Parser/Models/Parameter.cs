@@ -54,7 +54,7 @@ namespace WatchFace.Parser.Models
             foreach (var parameter in Children) parameter.Write(temporaryStream, traceOffset);
             var size = WriteValue(stream, temporaryStream.Length, traceOffset);
             temporaryStream.Seek(0, SeekOrigin.Begin);
-            temporaryStream.Copy(stream);
+            temporaryStream.CopyTo(stream);
             size += temporaryStream.Length;
             return size;
         }
