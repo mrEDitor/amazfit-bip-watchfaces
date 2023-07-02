@@ -1,0 +1,216 @@
+﻿@page "/"
+@using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.Formats.Webp
+@using SixLabors.ImageSharp.PixelFormats
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using Resources.Models
+@using WatchFace.Parser
+@using WatchFace.Parser.Models
+@using WatchFace.Parser.Utils
+@using Image = Resources.Models.Image
+@inject ILogger<Index> Logger
+@inject IJSRuntime JsRuntime
+
+<div class="container">
+    <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted">
+        <div class="col-4">
+            <h2 style="color: deepskyblue">WatchFace Editor</h2>
+        </div>
+        <div class="col-4">
+            <input class="form-control" placeholder="WatchFace.bin" id="fileName" value="@_name">
+        </div>
+        <div class="col-2">
+            <button class="btn btn-dark" onclick="document.getElementById('file').click()"style="width:100%">Open</button>
+            <InputFile id="file" hidden OnChange="LoadFile"/>
+        </div>
+
+        <div class="col-2">
+            <button class="btn btn-dark" @onclick="SaveFile" style="width:100%">Save</button>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-xl-2 col-4">
+            <img id="preview" src="@_preview" width="176" height="176" style="border: 4px forestgreen dotted" alt="preview" />
+            <p>
+                <label style="width: 100%" for="sample-time">Time:</label>
+                <input id="sample-time" type="datetime-local" style="width: 100%" onchange="@SetSampleTime" value="@_sampleTime.ToString("s")"/>
+            </p>
+            <p>
+                <label style="width: 100%" for="sample-battery">Battery:</label>
+                <input id="sample-battery" type="range" min="0" max="100" style="width: 100%" onchange="@SetSampleBattery" value="@_sampleBattery"/>
+            </p>
+            <p>
+                <label style="width: 100%" for="sample-distance">Steps:</label>
+                <input id="sample-distance" type="number" min="0" style="width: 30%" onchange="@SetSampleDistance" value="@_sampleDistance"/> m
+                <input id="sample-steps" type="number" min="0" style="width: 20%" onchange="@SetSampleSteps" value="@_sampleSteps"/>
+                /
+                <input id="sample-goal" type="number" min="0" style="width: 20%" onchange="@SetSampleGoal" value="@_sampleGoal"/>
+            </p>
+        </div>
+
+        <div class="col-xl-4 col-8">
+            <textarea id="json" class="form-control" style="font-family:monospace" rows="16">
+                @JsonSerializer.Serialize(_parameters, JsonOptions)
+            </textarea>
+            <button class="btn btn-primary" @onclick="PreviewFile" style="width:100%; margin-top:0.5rem">Validate and Render</button>
+        </div>
+
+        <div class="col-xl-6 col-12">
+            <div class="container">
+                <div class="row" style="overflow: scroll; white-space: nowrap">
+                    @for (var index = 0; index < _images.Count; index++)
+                    {
+                        <div class="col-4" style="display: inline-block; float: none">
+                            <a style="cursor:pointer" onclick="">✏️</a>
+                            #@index (@_images[index].Width*@_images[index].Height)
+                            <a style="cursor:pointer" onclick="">🗑️</a>
+                            <p>
+                                <img src="@(_images[index].ToBase64String(WebpFormat.Instance))" alt="@index" style="border: 4px deeppink dotted"/>
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        WriteIndented = true,
+    };
+
+    private string _name = string.Empty;
+    private List<Image<Argb32>> _images = new();
+    private WatchFace _parameters = new();
+
+    private string _preview = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    private DateTime _sampleTime = DateTime.Now;
+    private int _sampleBattery = 85;
+    private bool _sampleAlarm;
+    private bool _sampleBluetooth;
+    private int _sampleCalories;
+    private int _sampleDistance = 500;
+    private int _sampleSteps = 1000;
+    private int _sampleGoal = 3000;
+    private int? _samplePulse;
+    private bool _sampleUnlocked;
+    private AirCondition _sampleAirQuality;
+    private int? _sampleAirQualityIndex;
+    private bool _sampleNotDisturb;
+    private WeatherCondition _sampleWeather;
+    private int? _sampleTemperatureNow;
+    private int? _sampleTemperatureDay;
+    private int? _sampleTemperatureNight;
+    private int? _sampleTemperatureTomDay;
+    private int? _sampleTemperatureTomNight;
+
+    private async Task LoadFile(InputFileChangeEventArgs args)
+    {
+        _name = args.File.Name;
+
+        try
+        {
+            var buffer = new byte[args.File.Size];
+            await using var stream = args.File.OpenReadStream();
+            await stream.ReadAsync(buffer);
+            using var memory = new MemoryStream(buffer);
+            var reader = new Reader(memory);
+            reader.Read();
+            _images = new List<Image<Argb32>>(reader.Images);
+            _parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", e.ToString());
+            throw;
+        }
+    }
+
+    private async Task PreviewFile(MouseEventArgs arg)
+    {
+        try
+        {
+            var parameters = ParametersConverter.Build(_parameters);
+            var image = PreviewGenerator.CreateImage(parameters, _images.ToArray(), new()
+            {
+                Time = _sampleTime,
+                BatteryLevel = _sampleBattery,
+                Alarm = _sampleAlarm,
+                Bluetooth = _sampleBluetooth,
+                Calories = _sampleCalories,
+                Distance = _sampleDistance,
+                Goal = _sampleGoal,
+                Pulse = _samplePulse,
+                Steps = _sampleSteps,
+                Unlocked = _sampleUnlocked,
+                AirQuality = _sampleAirQuality,
+                AirQualityIndex = _sampleAirQualityIndex,
+                DoNotDisturb = _sampleNotDisturb,
+                CurrentWeather = _sampleWeather,
+                CurrentTemperature = _sampleTemperatureNow,
+                DayTemperature = _sampleTemperatureDay,
+                NightTemperature = _sampleTemperatureNight,
+                TomorrowDayTemperature = _sampleTemperatureTomDay,
+                TomorrowNightTemperature = _sampleTemperatureTomNight,
+            });
+            _preview = image.Bitmap.ToBase64String(WebpFormat.Instance);
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", e.ToString());
+            throw;
+        }        
+    }
+
+    private async Task SaveFile(MouseEventArgs arg)
+    {
+        try
+        {
+            using var memory = new MemoryStream();
+            var images = _images.Select(i => new Image(i)).ToList<IResource>();
+            var writer = new Writer(memory, images);
+            writer.Write(ParametersConverter.Build(_parameters));
+            var bytes = memory.ToArray().Select(value => (int)value).ToList();
+            await JsRuntime.InvokeVoidAsync("doSaveFile", _name, bytes);
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", e.ToString());
+            throw;
+        }
+    }
+
+    private void SetSampleTime(ChangeEventArgs arg)
+    {
+        _sampleTime = DateTime.Parse((string)arg.Value!);
+    }
+
+    private void SetSampleBattery(ChangeEventArgs arg)
+    {
+        _sampleBattery = int.Parse((string)arg.Value!);
+    }
+
+    private void SetSampleCalories(ChangeEventArgs arg)
+    {
+        _sampleCalories = int.Parse((string)arg.Value!);
+    }
+
+    private void SetSampleDistance(ChangeEventArgs arg)
+    {
+        _sampleDistance = int.Parse((string)arg.Value!);
+    }
+
+    private void SetSampleSteps(ChangeEventArgs arg)
+    {
+        _sampleSteps = int.Parse((string)arg.Value!);
+    }
+
+    private void SetSampleGoal(ChangeEventArgs arg)
+    {
+        _sampleGoal = int.Parse((string)arg.Value!);
+    }
+}

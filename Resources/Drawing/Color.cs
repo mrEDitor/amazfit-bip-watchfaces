@@ -4,11 +4,11 @@ namespace System;
 
 public struct Color
 {
-    private Argb32 _rgba;
+    private Argb32 _argb32;
 
     public static implicit operator Argb32(Color color)
     {
-        return color._rgba;
+        return color._argb32;
     }
 
     public static implicit operator SixLabors.ImageSharp.Color(Color color)
@@ -18,17 +18,17 @@ public struct Color
 
     public static implicit operator Color(Argb32 color)
     {
-        return new Color { _rgba = color };
+        return new Color { _argb32 = color };
     }
 
-    public byte A => _rgba.A;
-    public byte R => _rgba.R;
-    public byte G => _rgba.G;
-    public byte B => _rgba.B;
+    public byte A => _argb32.A;
+    public byte R => _argb32.R;
+    public byte G => _argb32.G;
+    public byte B => _argb32.B;
 
     public static Color FromArgb(int a, int r, int g, int b)
     {
-        return new Argb32(r, g, b, a);
+        return new Argb32(r / 255f, g / 255f, b / 255f, a / 255f);
     }
 
     public static Color FromArgb(int argb)
@@ -38,11 +38,11 @@ public struct Color
 
     public int ToArgb()
     {
-        return unchecked((int)_rgba.Argb);
+        return unchecked((int)_argb32.Argb);
     }
 
     public static Color FromArgb(int a, Color rgb)
     {
-        return new() { _rgba = new(rgb.R, rgb.G, rgb.B, a) };
+        return new() { _argb32 = new(rgb.R / 255f, rgb.G / 255f, rgb.B / 255f, a / 255f) };
     }
 }
