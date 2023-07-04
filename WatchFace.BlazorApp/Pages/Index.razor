@@ -9,7 +9,6 @@
 @using WatchFace.Parser.Models
 @using WatchFace.Parser.Utils
 @using Image = Resources.Models.Image
-@inject ILogger<Index> Logger
 @inject IJSRuntime JsRuntime
 
 <div class="container">
@@ -21,8 +20,8 @@
             <input class="form-control" placeholder="WatchFace.bin" id="fileName" value="@_name">
         </div>
         <div class="col-2">
-            <button class="btn btn-dark" onclick="document.getElementById('file').click()"style="width:100%">Open</button>
-            <InputFile id="file" hidden OnChange="LoadFile"/>
+            <button class="btn btn-dark" onclick="document.getElementById('file').click()" style="width:100%">Open</button>
+            <InputFile hidden id="file" OnChange="LoadFile"/>
         </div>
 
         <div class="col-2">
@@ -62,11 +61,24 @@
                     @for (var index = 0; index < _images.Count; index++)
                     {
                         <div class="col-4" style="display: inline-block; float: none">
+                            @{var id = "image-" + index;}
+                            <InputFile hidden id="@id" OnChange="LoadImage(index)"/>
+                            <a style="cursor:pointer" onclick="document.getElementById('@id').click()">📁</a>
                             <a style="cursor:pointer" onclick="">✏️</a>
+                            <a style="cursor:pointer" onclick="@DuplicateImage(index)">📋</a>
+                            <a style="cursor:pointer" onclick="@RemoveImage(index)">🗑️</a>
+                            <br/>
+                            @if (index > 0)
+                            {
+                                <a style="cursor:pointer" onclick="@MoveImageBackward(index)">⬅️</a>
+                            }
                             #@index (@_images[index].Width*@_images[index].Height)
-                            <a style="cursor:pointer" onclick="">🗑️</a>
+                            @if (index < _images.Count - 1)
+                            {
+                                <a style="cursor:pointer" onclick="@MoveImageForward(index)">➡️</a>
+                            }
                             <p>
-                                <img src="@(_images[index].ToBase64String(WebpFormat.Instance))" alt="@index" style="border: 4px deeppink dotted"/>
+                                <img src="@_renderedImages[index]" alt="@index" style="border: 4px deeppink dotted"/>
                             </p>
                         </div>
                     }
@@ -85,6 +97,7 @@
 
     private string _name = string.Empty;
     private List<Image<Argb32>> _images = new();
+    private List<string> _renderedImages = new();
     private WatchFace _parameters = new();
 
     private string _preview = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
@@ -121,6 +134,7 @@
             var reader = new Reader(memory);
             reader.Read();
             _images = new List<Image<Argb32>>(reader.Images);
+            _renderedImages = new List<string>(reader.Images.Select(i => i.ToBase64String(WebpFormat.Instance)));
             _parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
         }
         catch (Exception e)
@@ -212,5 +226,63 @@
     private void SetSampleGoal(ChangeEventArgs arg)
     {
         _sampleGoal = int.Parse((string)arg.Value!);
+    }
+
+    private Func<InputFileChangeEventArgs, Task> LoadImage(int currentIndex)
+    {
+        return async args =>
+        {
+            try
+            {
+                await using var stream = args.File.OpenReadStream();
+                _images[currentIndex] = await SixLabors.ImageSharp.Image.LoadAsync<Argb32>(stream);
+                _renderedImages[currentIndex] = _images[currentIndex].ToBase64String(WebpFormat.Instance);
+            }
+            catch (Exception e)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", e.ToString());
+                throw;
+            }
+        };
+    }
+
+    private Action RemoveImage(int currentIndex)
+    {
+        return () => MoveImage(currentIndex, -1);
+    }
+
+    private Action MoveImageForward(int currentIndex)
+    {
+        return () => MoveImage(currentIndex, currentIndex + 1);
+    }
+
+    private Action MoveImageBackward(int currentIndex)
+    {
+        return () => MoveImage(currentIndex, currentIndex - 1);
+    }
+
+    private Action DuplicateImage(int currentIndex)
+    {
+        return () => MoveImage(currentIndex, currentIndex + 1, duplicate: true);
+    }
+
+    private void MoveImage(int currentIndex, int newIndex, bool duplicate = false)
+    {
+        var image = _images[currentIndex];
+        var renderedImage = _renderedImages[currentIndex];
+
+        if (!duplicate)
+        {
+            _images.RemoveAt(currentIndex);
+            _renderedImages.RemoveAt(currentIndex);
+        }
+
+        if (newIndex >= 0)
+        {
+            _images.Insert(newIndex, image);
+            _renderedImages.Insert(newIndex, renderedImage);
+        }
+
+        StateHasChanged();
     }
 }
