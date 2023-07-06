@@ -8,6 +8,8 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <script src="js/bootstrap.min.js"></script>
+    <style>a { text-decoration: none; }</style>
 
     <script>
         window.doSaveFile = function (name, data) {
@@ -20,6 +22,28 @@
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+        };
+        window.doGenerateCalendar = function(sourceId, targetId, mondayOffset) {
+            const sourceInput = document.getElementById(sourceId);
+            const targetInput = document.getElementById(targetId);
+            let startDate = new Date(sourceInput.value);
+            if (isNaN(startDate)) {
+                sourceInput.value = new Date().toISOString().substring(0, 7);
+                startDate = new Date(sourceInput.value);
+            }
+
+            let dateMs = startDate - 86400000 * (startDate.getDay() - mondayOffset);
+            targetInput.value = startDate.toLocaleString('default', { month: 'long'});
+            targetInput.value += ' ' + startDate.getFullYear();
+            for (let i = 0; i < 6; ++i)
+            for (let j = 0; j < 7; ++j)
+            {
+                const today = new Date(dateMs).getDate();
+                targetInput.value += j ? ' ' : '\n';
+                if (today < 10) targetInput.value += '0';
+                targetInput.value += today;
+                dateMs += 86400000;
+            }
         };
     </script>
 </head>

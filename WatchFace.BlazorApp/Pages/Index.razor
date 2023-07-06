@@ -14,7 +14,10 @@
 <div class="container">
     <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted">
         <div class="col-4">
-            <h2 style="color: deepskyblue">WatchFace Editor</h2>
+            <b style="color: deepskyblue">Amazfit Bip WatchFace Editor</b>
+            <br />
+            <a href="https://github.com/mrEDitor/amazfit-bip-watchfaces">frontend</a> by <a href="https://mrEDitor.github.io">mrEDitor</a>,
+            <a href="https://bitbucket.org/valeronm/amazfitbiptools/">compiler</a> by valeronm
         </div>
         <div class="col-4">
             <input class="form-control" placeholder="WatchFace.bin" id="fileName" value="@_name">
@@ -63,19 +66,19 @@
                         <div class="col-4" style="display: inline-block; float: none">
                             @{var id = "image-" + index;}
                             <InputFile hidden id="@id" OnChange="LoadImage(index)"/>
-                            <a style="cursor:pointer" onclick="document.getElementById('@id').click()">📁</a>
-                            <a style="cursor:pointer" onclick="">✏️</a>
-                            <a style="cursor:pointer" onclick="@DuplicateImage(index)">📋</a>
-                            <a style="cursor:pointer" onclick="@RemoveImage(index)">🗑️</a>
+                            <a href="#" onclick="document.getElementById('@id').click()">📁</a>
+                            <a href="#" onclick="@GenerateImage(index)" data-bs-toggle="modal" data-bs-target="#generator-modal">🆎</a>
+                            <a href="#" onclick="@DuplicateImage(index)">🔁</a>
+                            <a href="#" onclick="@RemoveImage(index)">🗑️</a>
                             <br/>
                             @if (index > 0)
                             {
-                                <a style="cursor:pointer" onclick="@MoveImageBackward(index)">⬅️</a>
+                                <a href="#" onclick="@MoveImageBackward(index)">⬅️</a>
                             }
                             #@index (@_images[index].Width*@_images[index].Height)
                             @if (index < _images.Count - 1)
                             {
-                                <a style="cursor:pointer" onclick="@MoveImageForward(index)">➡️</a>
+                                <a href="#" onclick="@MoveImageForward(index)">➡️</a>
                             }
                             <p>
                                 <img src="@_renderedImages[index]" alt="@index" style="border: 4px deeppink dotted"/>
@@ -88,6 +91,31 @@
     </div>
 </div>
 
+<div class="modal fade" tabindex="-1" id="generator-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Generate image #@_generateImage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="generator-text" class="form-control" style="width:100%" rows="8">Text</textarea>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group dropup">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">📅 Generate calendar</button>
+                    <ul class="dropdown-menu">
+                        <li><input class="form-control" type="text" id="generator-date" placeholder="@(DateTime.Now.ToString("yyyy-MM"))" /></li>
+                        <li><a class="dropdown-item" href="#" onclick="doGenerateCalendar('generator-date', 'generator-text', 0)">From Sunday</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="doGenerateCalendar('generator-date', 'generator-text', 1)">From Monday</a></li>
+                    </ul>
+                </div>
+                <button disabled type="button" class="btn btn-primary">Coming soon!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @code{
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -95,12 +123,15 @@
         WriteIndented = true,
     };
 
+    private static readonly Image<Argb32> EmptyImage = new(176, 176);
     private string _name = string.Empty;
-    private List<Image<Argb32>> _images = new();
-    private List<string> _renderedImages = new();
+    private List<Image<Argb32>> _images = new() { EmptyImage };
+
+    private List<string> _renderedImages = new() { EmptyImage.ToBase64String(WebpFormat.Instance) };
     private WatchFace _parameters = new();
 
-    private string _preview = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    private int _generateImage;
+    private string _preview = EmptyImage.ToBase64String(WebpFormat.Instance);
     private DateTime _sampleTime = DateTime.Now;
     private int _sampleBattery = 85;
     private bool _sampleAlarm;
@@ -284,5 +315,14 @@
         }
 
         StateHasChanged();
+    }
+
+    private Action GenerateImage(int id)
+    {
+        return () =>
+        {
+            _generateImage = id;
+            StateHasChanged();
+        };
     }
 }
