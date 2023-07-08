@@ -9,25 +9,23 @@
 @using WatchFace.Parser.Models
 @using WatchFace.Parser.Utils
 @using Image = Resources.Models.Image
+@using SixLabors.Fonts
+@using SixLabors.ImageSharp.Drawing.Processing
+@using SixLabors.ImageSharp.Processing
+@using Color = System.Color
 @inject IJSRuntime JsRuntime
 
 <div class="container">
-    <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted">
-        <div class="col-4">
-            <b style="color: deepskyblue">Amazfit Bip WatchFace Editor</b>
-            <br />
-            <a href="https://github.com/mrEDitor/amazfit-bip-watchfaces">frontend</a> by <a href="https://mrEDitor.github.io">mrEDitor</a>,
-            <a href="https://bitbucket.org/valeronm/amazfitbiptools/">compiler</a> by valeronm
-        </div>
-        <div class="col-4">
+    <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted; padding: 0.2rem;">
+        <div class="col-xl-4 col-12" id="logo-holder" style="height: 4rem"></div>
+        <div class="col-xl-4 col-6">
             <input class="form-control" placeholder="WatchFace.bin" id="fileName" value="@_name">
         </div>
-        <div class="col-2">
+        <div class="col-xl-2 col-3">
             <button class="btn btn-dark" onclick="document.getElementById('file').click()" style="width:100%">Open</button>
             <InputFile hidden id="file" OnChange="LoadFile"/>
         </div>
-
-        <div class="col-2">
+        <div class="col-xl-2 col-3">
             <button class="btn btn-dark" @onclick="SaveFile" style="width:100%">Save</button>
         </div>
     </div>
@@ -95,11 +93,59 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Generate image #@_generateImage</h5>
+                <h5 class="modal-title">Generate image #@_generateImageId</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <textarea id="generator-text" class="form-control" style="width:100%" rows="8">Text</textarea>
+                <div style="margin: 2ex; float: left;">
+                    <img src="@_generatedImagePreview" alt="generating" style="border: 4px deeppink dotted"/>
+                </div>
+
+                <p>
+                    <label for="position-x">X:</label>
+                    <input style="width: 20%" type="number" id="position-x" value="@_generatePositionX" onchange="@SetPositionX"/>
+                    <label for="position-y">Y:</label>
+                    <input style="width: 20%" type="number" id="position-y" value="@_generatePositionY" onchange="@SetPositionY"/>
+                </p>
+                <p>
+                    <label style="width: 25%">Background:</label>
+                    <div style="width: 25%" class="btn-group dropdown">
+                        <button style="background:@(_generateBackgroundColor ?? WatchColor.White); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@(_generateBackgroundColor?.ToString() ?? "None")</button>
+                        <ul class="dropdown-menu">
+                            <li><a style="background:gray; color:black;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(null)">None</a></li>
+                            <li><a style="background:black; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Black)">Black</a></li>
+                            <li><a style="background:white; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.White)">White</a></li>
+                            <li><a style="background:red; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Red)">Red</a></li>
+                            <li><a style="background:green; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Green)">Green</a></li>
+                            <li><a style="background:blue; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Blue)">Blue</a></li>
+                            <li><a style="background:yellow; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Yellow)">Yellow</a></li>
+                            <li><a style="background:pink; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Pink)">Pink</a></li>
+                            <li><a style="background:aqua; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Aqua)">Aqua</a></li>
+                        </ul>
+                    </div>
+                </p>
+                <p>
+                    <label style="width: 25%">Text color:</label>
+                    <div style="width: 25%" class="btn-group dropdown">
+                        <button style="background:@(_generateForegroundColor); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@_generateForegroundColor</button>
+                        <ul class="dropdown-menu">
+                            <li><a style="background:black; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Black)">Black</a></li>
+                            <li><a style="background:white; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.White)">White</a></li>
+                            <li><a style="background:red; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Red)">Red</a></li>
+                            <li><a style="background:green; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Green)">Green</a></li>
+                            <li><a style="background:blue; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Blue)">Blue</a></li>
+                            <li><a style="background:yellow; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Yellow)">Yellow</a></li>
+                            <li><a style="background:pink; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Pink)">Pink</a></li>
+                            <li><a style="background:aqua; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Aqua)">Aqua</a></li>
+                        </ul>
+                    </div>
+                </p>
+                <p>
+                    <label style="@(_generateFont == null ? "color: red; animation: blink 1s ease infinite;" : "") width: 10%" for="font">Font:</label>
+                    <InputFile id="font" OnChange="LoadFont" style="width: 40%"/>
+                </p>
+
+                <textarea id="generator-text" class="form-control" style="width:100%" rows="8" onchange="@UpdateGenerateText">@_generateText</textarea>
             </div>
             <div class="modal-footer">
                 <div class="btn-group dropup">
@@ -110,7 +156,7 @@
                         <li><a class="dropdown-item" href="#" onclick="doGenerateCalendar('generator-date', 'generator-text', 1)">From Monday</a></li>
                     </ul>
                 </div>
-                <button disabled type="button" class="btn btn-primary">Coming soon!</button>
+                <button type="button" class="btn btn-primary" onclick="@SaveImage">Save</button>
             </div>
         </div>
     </div>
@@ -124,14 +170,23 @@
     };
 
     private static readonly Image<Argb32> EmptyImage = new(176, 176);
+    private static readonly string EmptyImagePreview = EmptyImage.ToBase64String(WebpFormat.Instance);
     private string _name = string.Empty;
     private List<Image<Argb32>> _images = new() { EmptyImage };
 
-    private List<string> _renderedImages = new() { EmptyImage.ToBase64String(WebpFormat.Instance) };
+    private List<string> _renderedImages = new() { EmptyImagePreview };
     private WatchFace _parameters = new();
 
-    private int _generateImage;
-    private string _preview = EmptyImage.ToBase64String(WebpFormat.Instance);
+    private string _generateText = "Text";
+    private Image<Argb32> _generatedImage;
+    private string _generatedImagePreview = EmptyImagePreview;
+    private int _generateImageId;
+    private int _generatePositionX;
+    private int _generatePositionY;
+    private WatchColor? _generateBackgroundColor;
+    private WatchColor _generateForegroundColor;
+    private FontFamily? _generateFont;
+    private string _preview = EmptyImagePreview;
     private DateTime _sampleTime = DateTime.Now;
     private int _sampleBattery = 85;
     private bool _sampleAlarm;
@@ -259,6 +314,93 @@
         _sampleGoal = int.Parse((string)arg.Value!);
     }
 
+    private void SetPositionX(ChangeEventArgs arg)
+    {
+        _generatePositionX = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void SetPositionY(ChangeEventArgs arg)
+    {
+        _generatePositionY = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private Action SetBackgroundColor(WatchColor? color)
+    {
+        return () =>
+        {
+            _generateBackgroundColor = color;
+            DoGenerateImage();
+            StateHasChanged();
+        };
+    }
+
+    private Action SetForegroundColor(WatchColor color)
+    {
+        return () =>
+        {
+            _generateForegroundColor = color;
+            DoGenerateImage();
+            StateHasChanged();
+        };
+    }
+
+    private async Task LoadFont(InputFileChangeEventArgs args)
+    {
+        try
+        {
+            var buffer = new byte[args.File.Size];
+            await using var stream = args.File.OpenReadStream(maxAllowedSize: args.File.Size);
+            await stream.ReadAsync(buffer);
+            using var memory = new MemoryStream(buffer);
+            var fontCollection = new FontCollection();
+            _generateFont = fontCollection.Add(memory);
+            DoGenerateImage();
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", e.ToString());
+            throw;
+        }
+    }
+
+    private void UpdateGenerateText(ChangeEventArgs arg)
+    {
+        _generateText = (string)arg.Value!;
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void DoGenerateImage()
+    {
+        _generatedImage = _images[_generateImageId].Clone();
+
+        if (_generateFont != null)
+        {
+            _generatedImage.Mutate(g =>
+            {
+                var position = new PointF(_generatePositionX, _generatePositionY);
+                var color = Color.FromRgb((int)_generateForegroundColor);
+                var font = _generateFont.Value.CreateFont(12);
+                g.DrawText(_generateText, font, color, position);
+            });
+        }
+
+        _generatedImagePreview = _generatedImage.ToBase64String(WebpFormat.Instance);
+    }
+
+    private void SaveImage()
+    {
+        DoGenerateImage();
+        _images[_generateImageId] = _generatedImage;
+        _renderedImages[_generateImageId] = _generatedImagePreview;
+        StateHasChanged();
+    }
+
     private Func<InputFileChangeEventArgs, Task> LoadImage(int currentIndex)
     {
         return async args =>
@@ -321,8 +463,21 @@
     {
         return () =>
         {
-            _generateImage = id;
-            StateHasChanged();
+            _generateImageId = id;
+            DoGenerateImage();
         };
+    }
+
+    [Flags]
+    private enum WatchColor
+    {
+        Black = 0x000000,
+        Red = 0xFF0000,
+        Green = 0x00FF00,
+        Blue = 0x0000FF,
+        Yellow = 0xFFFF00,
+        Pink = 0xFF00FF,
+        Aqua = 0x00FFFF,
+        White = 0xFFFFFF,
     }
 }

@@ -45,4 +45,10 @@ public struct Color
     {
         return new() { _argb32 = new(rgb.R / 255f, rgb.G / 255f, rgb.B / 255f, a / 255f) };
     }
+
+    public static Color FromRgb(int rgb)
+    {
+        var urgb = unchecked((uint) rgb << 8);
+        return new Argb32(urgb) { A = 255 };
+    }
 }

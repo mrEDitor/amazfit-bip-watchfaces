@@ -44,12 +44,51 @@
                 targetInput.value += today;
                 dateMs += 86400000;
             }
+
+            targetInput.dispatchEvent(new Event('change'));
         };
+        const placeLogo = function () {
+            const holderRect = document.getElementById('logo-holder').getBoundingClientRect();
+            const logo = document.getElementById('logo');
+            logo.style.left = holderRect.left + 'px';
+            logo.style.top = holderRect.top + 'px';
+        };
+        window.addEventListener('load', placeLogo);
+        window.addEventListener('resize', placeLogo);
     </script>
+    <style>
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app">Loading...</div>
+
+    <div id="logo" style="position: absolute;">
+        <h3 style="color: deepskyblue">Amazfit Bip WatchFace Editor</h3>
+        <div style="overflow: visible; white-space: nowrap">
+            <a href="https://github.com/mrEDitor/amazfit-bip-watchfaces">frontend</a> by <a href="https://mrEDitor.github.io">mrEDitor</a>,
+            <a href="https://bitbucket.org/valeronm/amazfitbiptools/">compiler</a> by valeronm
+        </div>
+    </div>
+
+    <div id="app">
+        <main>
+            <article class="content px-4">
+                <div class="container">
+                    <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted; padding: 0.2rem;">
+                        <div class="col-xl-4 col-12" id="logo-holder" style="height: 4rem"></div>
+                        <div class="col-xl-8 col-12">
+                            <h2 style="color: deepskyblue">Loading...</h2>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </main>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
