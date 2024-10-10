@@ -31,84 +31,32 @@
     <None Remove="WeatherIcons\9.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="WeatherIcons\0.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\1.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\10.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\11.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\12.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\13.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\14.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\15.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\16.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\17.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\18.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\19.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\2.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\20.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\21.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\22.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\23.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\24.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\25.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\3.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\4.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\5.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\6.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\7.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\8.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WeatherIcons\9.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="WeatherIcons\0.png" />
+    <EmbeddedResource Include="WeatherIcons\1.png" />
+    <EmbeddedResource Include="WeatherIcons\10.png" />
+    <EmbeddedResource Include="WeatherIcons\11.png" />
+    <EmbeddedResource Include="WeatherIcons\12.png" />
+    <EmbeddedResource Include="WeatherIcons\13.png" />
+    <EmbeddedResource Include="WeatherIcons\14.png" />
+    <EmbeddedResource Include="WeatherIcons\15.png" />
+    <EmbeddedResource Include="WeatherIcons\16.png" />
+    <EmbeddedResource Include="WeatherIcons\17.png" />
+    <EmbeddedResource Include="WeatherIcons\18.png" />
+    <EmbeddedResource Include="WeatherIcons\19.png" />
+    <EmbeddedResource Include="WeatherIcons\2.png" />
+    <EmbeddedResource Include="WeatherIcons\20.png" />
+    <EmbeddedResource Include="WeatherIcons\21.png" />
+    <EmbeddedResource Include="WeatherIcons\22.png" />
+    <EmbeddedResource Include="WeatherIcons\23.png" />
+    <EmbeddedResource Include="WeatherIcons\24.png" />
+    <EmbeddedResource Include="WeatherIcons\25.png" />
+    <EmbeddedResource Include="WeatherIcons\3.png" />
+    <EmbeddedResource Include="WeatherIcons\4.png" />
+    <EmbeddedResource Include="WeatherIcons\5.png" />
+    <EmbeddedResource Include="WeatherIcons\6.png" />
+    <EmbeddedResource Include="WeatherIcons\7.png" />
+    <EmbeddedResource Include="WeatherIcons\8.png" />
+    <EmbeddedResource Include="WeatherIcons\9.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Resources\Resources.csproj" />
