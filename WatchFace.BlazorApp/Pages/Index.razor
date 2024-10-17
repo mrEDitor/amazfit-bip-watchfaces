@@ -51,8 +51,7 @@
         </div>
 
         <div class="col-xl-4 col-8">
-            <textarea id="json" class="form-control" style="font-family:monospace" rows="16" @bind="@_parametersJson">
-            </textarea>
+            <textarea id="json" class="form-control" style="font-family:monospace" rows="16"></textarea>
             <button class="btn btn-primary" @onclick="PreviewFile" style="width:100%; margin-top:0.5rem">Validate and Render</button>
         </div>
 
@@ -176,7 +175,6 @@
 
     private List<string> _renderedImages = new() { EmptyImagePreview };
     private WatchFace _parameters = new();
-    private string _parametersJson = String.Empty;
 
     private string _generateText = "Text";
     private Image<Argb32> _generatedImage;
@@ -208,6 +206,20 @@
     private int? _sampleTemperatureTomDay;
     private int? _sampleTemperatureTomNight;
 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("window.initCodeMirror");
+        }
+    }
+
+    private ValueTask<string> GetJsonAsync()
+    {
+        return JsRuntime.InvokeAsync<string>("window.codeMirrorEditor.getValue");
+    }
+
     private async Task LoadFile(InputFileChangeEventArgs args)
     {
         _name = args.File.Name;
@@ -224,7 +236,8 @@
             _images = new List<Image<Argb32>>(reader.Images);
             _renderedImages = new List<string>(reader.Images.Select(i => i.ToBase64String(WebpFormat.Instance)));
             _parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
-            _parametersJson = JsonSerializer.Serialize(_parameters, JsonOptions);
+
+            await JsRuntime.InvokeVoidAsync("window.codeMirrorEditor.setValue", JsonSerializer.Serialize(_parameters, JsonOptions));
         }
         catch (Exception e)
         {
@@ -239,7 +252,8 @@
 
         try
         {
-            _parameters = JsonSerializer.Deserialize<WatchFace>(_parametersJson, JsonOptions) ?? throw new InvalidOperationException("Json error!");
+            _parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
+                          ?? throw new InvalidOperationException("Json error!");
 
             var parameters = ParametersConverter.Build(_parameters);
             var image = PreviewGenerator.CreateImage(parameters, _images.ToArray(), new()
@@ -277,7 +291,8 @@
     {
         try
         {
-            _parameters = JsonSerializer.Deserialize<WatchFace>(_parametersJson, JsonOptions) ?? throw new InvalidOperationException("Json error!");
+            _parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
+                          ?? throw new InvalidOperationException("Json error!");
 
             using var memory = new MemoryStream();
             var images = _images.Select(i => new Image(i)).ToList<IResource>();
