@@ -3,10 +3,66 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="WeatherIcons\0.png" />
+    <None Remove="WeatherIcons\1.png" />
+    <None Remove="WeatherIcons\10.png" />
+    <None Remove="WeatherIcons\11.png" />
+    <None Remove="WeatherIcons\12.png" />
+    <None Remove="WeatherIcons\13.png" />
+    <None Remove="WeatherIcons\14.png" />
+    <None Remove="WeatherIcons\15.png" />
+    <None Remove="WeatherIcons\16.png" />
+    <None Remove="WeatherIcons\17.png" />
+    <None Remove="WeatherIcons\18.png" />
+    <None Remove="WeatherIcons\19.png" />
+    <None Remove="WeatherIcons\2.png" />
+    <None Remove="WeatherIcons\20.png" />
+    <None Remove="WeatherIcons\21.png" />
+    <None Remove="WeatherIcons\22.png" />
+    <None Remove="WeatherIcons\23.png" />
+    <None Remove="WeatherIcons\24.png" />
+    <None Remove="WeatherIcons\25.png" />
+    <None Remove="WeatherIcons\3.png" />
+    <None Remove="WeatherIcons\4.png" />
+    <None Remove="WeatherIcons\5.png" />
+    <None Remove="WeatherIcons\6.png" />
+    <None Remove="WeatherIcons\7.png" />
+    <None Remove="WeatherIcons\8.png" />
+    <None Remove="WeatherIcons\9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WeatherIcons\0.png" />
+    <EmbeddedResource Include="WeatherIcons\1.png" />
+    <EmbeddedResource Include="WeatherIcons\10.png" />
+    <EmbeddedResource Include="WeatherIcons\11.png" />
+    <EmbeddedResource Include="WeatherIcons\12.png" />
+    <EmbeddedResource Include="WeatherIcons\13.png" />
+    <EmbeddedResource Include="WeatherIcons\14.png" />
+    <EmbeddedResource Include="WeatherIcons\15.png" />
+    <EmbeddedResource Include="WeatherIcons\16.png" />
+    <EmbeddedResource Include="WeatherIcons\17.png" />
+    <EmbeddedResource Include="WeatherIcons\18.png" />
+    <EmbeddedResource Include="WeatherIcons\19.png" />
+    <EmbeddedResource Include="WeatherIcons\2.png" />
+    <EmbeddedResource Include="WeatherIcons\20.png" />
+    <EmbeddedResource Include="WeatherIcons\21.png" />
+    <EmbeddedResource Include="WeatherIcons\22.png" />
+    <EmbeddedResource Include="WeatherIcons\23.png" />
+    <EmbeddedResource Include="WeatherIcons\24.png" />
+    <EmbeddedResource Include="WeatherIcons\25.png" />
+    <EmbeddedResource Include="WeatherIcons\3.png" />
+    <EmbeddedResource Include="WeatherIcons\4.png" />
+    <EmbeddedResource Include="WeatherIcons\5.png" />
+    <EmbeddedResource Include="WeatherIcons\6.png" />
+    <EmbeddedResource Include="WeatherIcons\7.png" />
+    <EmbeddedResource Include="WeatherIcons\8.png" />
+    <EmbeddedResource Include="WeatherIcons\9.png" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Resources\Resources.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>

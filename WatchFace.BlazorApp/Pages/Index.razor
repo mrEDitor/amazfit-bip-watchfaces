@@ -42,16 +42,16 @@
             </p>
             <p>
                 <label style="width: 100%" for="sample-distance">Steps:</label>
-                <input id="sample-distance" type="number" min="0" style="width: 30%" onchange="@SetSampleDistance" value="@_sampleDistance"/> m
-                <input id="sample-steps" type="number" min="0" style="width: 20%" onchange="@SetSampleSteps" value="@_sampleSteps"/>
+                <input id="sample-distance" type="number" min="0" style="width: 70px" onchange="@SetSampleDistance" value="@_sampleDistance"/> m
+                <br/>
+                <input id="sample-steps" type="number" min="0" style="width: 70px" onchange="@SetSampleSteps" value="@_sampleSteps"/>
                 /
-                <input id="sample-goal" type="number" min="0" style="width: 20%" onchange="@SetSampleGoal" value="@_sampleGoal"/>
+                <input id="sample-goal" type="number" min="0" style="width: 70px" onchange="@SetSampleGoal" value="@_sampleGoal"/>
             </p>
         </div>
 
         <div class="col-xl-4 col-8">
-            <textarea id="json" class="form-control" style="font-family:monospace" rows="16">
-                @JsonSerializer.Serialize(_parameters, JsonOptions)
+            <textarea id="json" class="form-control" style="font-family:monospace" rows="16" @bind="@_parametersJson">
             </textarea>
             <button class="btn btn-primary" @onclick="PreviewFile" style="width:100%; margin-top:0.5rem">Validate and Render</button>
         </div>
@@ -176,6 +176,7 @@
 
     private List<string> _renderedImages = new() { EmptyImagePreview };
     private WatchFace _parameters = new();
+    private string _parametersJson = String.Empty;
 
     private string _generateText = "Text";
     private Image<Argb32> _generatedImage;
@@ -210,6 +211,7 @@
     private async Task LoadFile(InputFileChangeEventArgs args)
     {
         _name = args.File.Name;
+        _preview = EmptyImagePreview;
 
         try
         {
@@ -222,6 +224,7 @@
             _images = new List<Image<Argb32>>(reader.Images);
             _renderedImages = new List<string>(reader.Images.Select(i => i.ToBase64String(WebpFormat.Instance)));
             _parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
+            _parametersJson = JsonSerializer.Serialize(_parameters, JsonOptions);
         }
         catch (Exception e)
         {
@@ -232,8 +235,12 @@
 
     private async Task PreviewFile(MouseEventArgs arg)
     {
+        _preview = EmptyImagePreview;
+
         try
         {
+            _parameters = JsonSerializer.Deserialize<WatchFace>(_parametersJson, JsonOptions) ?? throw new InvalidOperationException("Json error!");
+
             var parameters = ParametersConverter.Build(_parameters);
             var image = PreviewGenerator.CreateImage(parameters, _images.ToArray(), new()
             {
@@ -270,6 +277,8 @@
     {
         try
         {
+            _parameters = JsonSerializer.Deserialize<WatchFace>(_parametersJson, JsonOptions) ?? throw new InvalidOperationException("Json error!");
+
             using var memory = new MemoryStream();
             var images = _images.Select(i => new Image(i)).ToList<IResource>();
             var writer = new Writer(memory, images);

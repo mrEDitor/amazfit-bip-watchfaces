@@ -51,7 +51,7 @@ public static class ImageExtensions
             ShapeOptions =
             {
                 IntersectionRule =
-                    fillMode == FillMode.Alternate ? IntersectionRule.Nonzero : IntersectionRule.OddEven,
+                    fillMode == FillMode.Alternate ? IntersectionRule.NonZero : IntersectionRule.EvenOdd,
             }, 
         };
         drawer.FillPolygon(

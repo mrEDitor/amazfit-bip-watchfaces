@@ -21,7 +21,7 @@ public class Graphics<TPixel> : IDisposable
     {
         Rgba32 argb32 = default;
         _source[x, y].ToRgba32(ref argb32);
-        return System.Color.FromArgb(unchecked((int)argb32.Rgba));
+        return System.Color.FromArgb(unchecked((int)argb32.A), unchecked((int)argb32.R), unchecked((int)argb32.G), unchecked((int)argb32.B));
     }
 
     public void SetPixel(int x, int y, TPixel value)

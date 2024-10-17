@@ -71,16 +71,14 @@ namespace Resources.Image
                     if (color.A < 0x80 && _transparency == 0)
                     {
                         Logger.Trace("Palette item {0}: R {1:X2}, G {2:X2}, B {3:X2}, Transaparent color",
-                            _palette.Count, color.R, color.G, color.B
-                        );
+                            _palette.Count, color.R, color.G, color.B);
                         _palette.Insert(0, color);
                         _transparency = 1;
                     }
                     else
                     {
-                        Logger.Trace("Palette item {0}: R {1:X2}, G {2:X2}, B {3:X2}",
-                            _palette.Count, color.R, color.G, color.B
-                        );
+                        Logger.Trace("Palette item {0}: R {1:X2}, G {2:X2}, B {3:X2}", 
+                            _palette.Count, color.R, color.G, color.B);
                         _palette.Add(color);
                     }
                 }
