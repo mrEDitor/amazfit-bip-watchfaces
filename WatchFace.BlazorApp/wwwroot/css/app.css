@@ -62,3 +62,24 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+#texture-preview:hover {
+    --pattern-angle: 45deg;
+    --pattern-size: 10%;
+    --pattern-color1: rgb(254, 254, 240);
+    --pattern-color2: rgba(162, 206, 234, 0.4);
+    --pattern-color3: rgba(82, 82, 86, 0.4);
+    background-color: var(--pattern-color1);
+    background-image:
+            repeating-linear-gradient(
+                    calc(90deg - var(--pattern-angle) * -1),
+                    transparent 0 calc(var(--pattern-size) / 2),
+                    var(--pattern-color3) 0 var(--pattern-size)
+            ),
+            repeating-linear-gradient(
+                    var(--pattern-angle),
+                    transparent 0 calc(var(--pattern-size) / 2),
+                    var(--pattern-color2) 0 var(--pattern-size)
+            );
+    background-blend-mode: multiply;
+}

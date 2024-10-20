@@ -26,7 +26,7 @@
             a.remove();
             window.URL.revokeObjectURL(url);
         };
-        window.doGenerateCalendar = function(sourceId, targetId, mondayOffset) {
+        window.doGenerateCalendar = function (sourceId, targetId, mondayOffset) {
             const sourceInput = document.getElementById(sourceId);
             const targetInput = document.getElementById(targetId);
             let startDate = new Date(sourceInput.value);
@@ -36,17 +36,16 @@
             }
 
             let dateMs = startDate - 86400000 * (startDate.getDay() - mondayOffset);
-            targetInput.value = startDate.toLocaleString('default', { month: 'long'});
+            targetInput.value = startDate.toLocaleString('default', {month: 'long'});
             targetInput.value += ' ' + startDate.getFullYear();
             for (let i = 0; i < 6; ++i)
-            for (let j = 0; j < 7; ++j)
-            {
-                const today = new Date(dateMs).getDate();
-                targetInput.value += j ? ' ' : '\n';
-                if (today < 10) targetInput.value += '0';
-                targetInput.value += today;
-                dateMs += 86400000;
-            }
+                for (let j = 0; j < 7; ++j) {
+                    const today = new Date(dateMs).getDate();
+                    targetInput.value += j ? ' ' : '\n';
+                    if (today < 10) targetInput.value += '0';
+                    targetInput.value += today;
+                    dateMs += 86400000;
+                }
 
             targetInput.dispatchEvent(new Event('change'));
         };
@@ -66,21 +65,36 @@
                 lineNumbers: true,
             });
         };
+
+        window.animateTexture = () => {
+            const texturePreview = document.getElementById("texture-preview");
+            texturePreview.addEventListener("mousemove", (e) => {
+                console.log(texturePreview);
+                texturePreview.style.backgroundPositionX = -e.offsetX + "px";
+                texturePreview.style.backgroundPositionY = -e.offsetY + "px";
+            });
+        };
     </script>
     <style>
         @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
+            0% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div id="logo" style="position: absolute;">
-        <h3 style="color: deepskyblue">Amazfit Bip WatchFace Editor</h3>
-        <div style="font-size: 80%; overflow: visible; white-space: nowrap">
+<div id="logo" style="position: absolute;">
+    <h3 style="color: deepskyblue">Amazfit Bip WatchFace Editor</h3>
+    <div style="font-size: 80%; overflow: visible; white-space: nowrap">
             <a href="https://bitbucket.org/valeronm/amazfitbiptools/">compiler</a> by valeronm,
             <a href="https://github.com/mrEDitor/amazfit-bip-watchfaces">frontend</a> by <a href="https://mrEDitor.github.io">mrEDitor</a>,
             JSON editor is <a href="https://github.com/codemirror/codemirror5">CodeMirror</a>

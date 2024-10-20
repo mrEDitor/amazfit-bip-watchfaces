@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Globalization
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.Formats.Webp
 @using SixLabors.ImageSharp.PixelFormats
@@ -51,6 +52,10 @@
         </div>
 
         <div class="col-xl-4 col-8">
+            <p>
+                <input id="color" type="color" value="@($"#{_colorPicker:x6}")" onchange="@SetColorPicker"/>
+                is <input id="color-dec" type="number" width="10ex" value="@_colorPicker" onchange="@SetColorPicker"/>
+            </p>
             <textarea id="json" class="form-control" style="font-family:monospace" rows="16"></textarea>
             <button class="btn btn-primary" @onclick="PreviewFile" style="width:100%; margin-top:0.5rem">Validate and Render</button>
         </div>
@@ -78,7 +83,7 @@
                                 <a href="#" onclick="@MoveImageForward(index)">➡️</a>
                             }
                             <p>
-                                <img src="@_renderedImages[index]" alt="@index" style="border: 4px deeppink dotted"/>
+                                <img src="@_renderedImages[index]" alt="@index" style="outline: 4px deeppink dotted"/>
                             </p>
                         </div>
                     }
@@ -95,19 +100,20 @@
                 <h5 class="modal-title">Generate image #@_generateImageId</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div style="margin: 2ex; float: left;">
-                    <img src="@_generatedImagePreview" alt="generating" style="border: 4px deeppink dotted"/>
+            <div class="modal-body" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(8, 1fr); gap: 8px;">
+                <div style="grid-row: span 4 / span 4; display: flex; justify-content: center; align-items: center;">
+                    <img id="texture-preview" src="@_generatedImagePreview" alt="generating" style="outline: 4px deeppink dotted"/>
                 </div>
 
-                <p>
-                    <label for="position-x">X:</label>
-                    <input style="width: 20%" type="number" id="position-x" value="@_generatePositionX" onchange="@SetPositionX"/>
-                    <label for="position-y">Y:</label>
-                    <input style="width: 20%" type="number" id="position-y" value="@_generatePositionY" onchange="@SetPositionY"/>
-                </p>
-                <p>
-                    <label style="width: 25%">Background:</label>
+                <div>
+                    X: <input style="width: 25%" type="number" id="position-x" value="@_generatePositionX" onchange="@SetPositionX"/>
+                    Y: <input style="width: 25%" type="number" id="position-y" value="@_generatePositionY" onchange="@SetPositionY"/>
+                    <br/>
+                    W: <input style="width: 25%" type="number" id="position-w" value="@_generatePositionW" onchange="@SetPositionW"/>
+                    H: <input style="width: 25%" type="number" id="position-h" value="@_generatePositionH" onchange="@SetPositionH"/>
+                </div>
+                <div>
+                    Background:
                     <div style="width: 25%" class="btn-group dropdown">
                         <button style="background:@(_generateBackgroundColor ?? WatchColor.White); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@(_generateBackgroundColor?.ToString() ?? "None")</button>
                         <ul class="dropdown-menu">
@@ -122,9 +128,13 @@
                             <li><a style="background:aqua; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Aqua)">Aqua</a></li>
                         </ul>
                     </div>
-                </p>
-                <p>
-                    <label style="width: 25%">Text color:</label>
+                    <br/>
+                    <input type="checkbox" id="keep-foreground" value="@_generateKeepForeground" onchange="@SetKeepForeground"/>
+                    X: <input style="width: 25%" type="number" id="position-a" value="@_generatePositionA" onchange="@SetPositionA"/>
+                    Y: <input style="width: 25%" type="number" id="position-b" value="@_generatePositionB" onchange="@SetPositionB"/>
+                </div>
+                <div>
+                    Text color:
                     <div style="width: 25%" class="btn-group dropdown">
                         <button style="background:@(_generateForegroundColor); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@_generateForegroundColor</button>
                         <ul class="dropdown-menu">
@@ -138,13 +148,15 @@
                             <li><a style="background:aqua; color:gray;" class="dropdown-item" href="#" onclick="@SetForegroundColor(WatchColor.Aqua)">Aqua</a></li>
                         </ul>
                     </div>
-                </p>
-                <p>
-                    <label style="@(_generateFont == null ? "color: red; animation: blink 1s ease infinite;" : "") width: 10%" for="font">Font:</label>
+                </div>
+                <div>
+                    <span style="@(_generateFont == null ? "color: red; animation: blink 1s ease infinite;" : "")">Font:</span>
                     <InputFile id="font" OnChange="LoadFont" style="width: 40%"/>
-                </p>
+                    <br/>
+                    Size: <input style="width: 25%" type="number" id="font-size" value="@_generateFontSize" onchange="@SetFontSize"/>
+                </div>
 
-                <textarea id="generator-text" class="form-control" style="width:100%" rows="8" onchange="@UpdateGenerateText">@_generateText</textarea>
+                <textarea id="generator-text" class="form-control" style="grid-row: span 4 / span 4; grid-column: span 2 / span 2; width:100%" onchange="@UpdateGenerateText">@_generateText</textarea>
             </div>
             <div class="modal-footer">
                 <div class="btn-group dropup">
@@ -179,12 +191,19 @@
     private string _generateText = "Text";
     private Image<Argb32> _generatedImage;
     private string _generatedImagePreview = EmptyImagePreview;
+    private int _colorPicker;
     private int _generateImageId;
+    private bool _generateKeepForeground;
     private int _generatePositionX;
     private int _generatePositionY;
+    private int _generatePositionA;
+    private int _generatePositionB;
+    private int _generatePositionW;
+    private int _generatePositionH;
     private WatchColor? _generateBackgroundColor;
     private WatchColor _generateForegroundColor;
     private FontFamily? _generateFont;
+    private int _generateFontSize = 9;
     private string _preview = EmptyImagePreview;
     private DateTime _sampleTime = DateTime.Now;
     private int _sampleBattery = 85;
@@ -338,6 +357,34 @@
         _sampleGoal = int.Parse((string)arg.Value!);
     }
 
+    private void SetPositionW(ChangeEventArgs arg)
+    {
+        _generatePositionW = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void SetPositionH(ChangeEventArgs arg)
+    {
+        _generatePositionH = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void SetPositionA(ChangeEventArgs arg)
+    {
+        _generatePositionA = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void SetPositionB(ChangeEventArgs arg)
+    {
+        _generatePositionB = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
     private void SetPositionX(ChangeEventArgs arg)
     {
         _generatePositionX = int.Parse((string)arg.Value!);
@@ -348,6 +395,28 @@
     private void SetPositionY(ChangeEventArgs arg)
     {
         _generatePositionY = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
+    }
+
+    private void SetColorPicker(ChangeEventArgs arg)
+    {
+        var value = (string)arg.Value!;
+        var parsed = value.StartsWith('#')
+            ? int.TryParse(value[1..], NumberStyles.HexNumber, null, out var colorPicker)
+            : int.TryParse(value, out colorPicker);
+
+        Console.WriteLine(value);
+        if (parsed && _colorPicker != colorPicker)
+        {
+            _colorPicker = colorPicker;
+            StateHasChanged();
+        }
+    }
+
+    private void SetKeepForeground(ChangeEventArgs arg)
+    {
+        _generateKeepForeground = (bool)arg.Value!;
         DoGenerateImage();
         StateHasChanged();
     }
@@ -370,6 +439,13 @@
             DoGenerateImage();
             StateHasChanged();
         };
+    }
+
+    private void SetFontSize(ChangeEventArgs arg)
+    {
+        _generateFontSize = int.Parse((string)arg.Value!);
+        DoGenerateImage();
+        StateHasChanged();
     }
 
     private async Task LoadFont(InputFileChangeEventArgs args)
@@ -401,15 +477,26 @@
 
     private void DoGenerateImage()
     {
-        _generatedImage = _images[_generateImageId].Clone();
+        var bgColor = Color.FromArgb(0);
+        if (_generateBackgroundColor is { } color)
+        {
+            bgColor = Color.FromRgb((int)color);
+        }
+
+        _generatedImage = new Image<Argb32>(_generatePositionW, _generatePositionH, bgColor);
 
         if (_generateFont != null)
         {
             _generatedImage.Mutate(g =>
             {
+                if (_generateKeepForeground)
+                {
+                    g.DrawImage(_images[_generateImageId], new Point(_generatePositionA, _generatePositionB), 1f);
+                }
+
                 var position = new PointF(_generatePositionX, _generatePositionY);
                 var color = Color.FromRgb((int)_generateForegroundColor);
-                var font = _generateFont.Value.CreateFont(12);
+                var font = _generateFont.Value.CreateFont(_generateFontSize);
                 g.DrawText(_generateText, font, color, position);
             });
         }
@@ -483,12 +570,17 @@
         StateHasChanged();
     }
 
-    private Action GenerateImage(int id)
+    private Func<Task> GenerateImage(int id)
     {
-        return () =>
+        return async () =>
         {
             _generateImageId = id;
+            _generatePositionA = _generatePositionB = 0;
+            _generatePositionW = _images[id].Width;
+            _generatePositionH = _images[id].Height;
             DoGenerateImage();
+            StateHasChanged();
+            await JsRuntime.InvokeVoidAsync("animateTexture");
         };
     }
 
