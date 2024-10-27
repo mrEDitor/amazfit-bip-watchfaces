@@ -1,10 +1,12 @@
 ﻿@page "/"
+@using System.Drawing
 @using System.Globalization
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.Formats.Webp
 @using SixLabors.ImageSharp.PixelFormats
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@using Resources.Image
 @using Resources.Models
 @using WatchFace.Parser
 @using WatchFace.Parser.Models
@@ -13,10 +15,28 @@
 @using SixLabors.Fonts
 @using SixLabors.ImageSharp.Drawing.Processing
 @using SixLabors.ImageSharp.Processing
+@using Bitmap = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Argb32>;
+@using Point = SixLabors.ImageSharp.Point
+@using PointF = SixLabors.ImageSharp.PointF
+@using Reader = WatchFace.Parser.Reader
+@using Rectangle = System.Drawing.Rectangle
+@using Writer = WatchFace.Parser.Writer
 @using Color = System.Color
 @inject IJSRuntime JsRuntime
 
 <div class="container">
+    <div id="loadingModal" class="modal" tabindex="-1" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body" style="text-align: center">
+                    <div class="spinner-border m-5" style="width: 6rem; height: 6rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Please, wait...</h5>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row mt-2" style="border-bottom: 0.8rem deepskyblue dotted; padding: 0.2rem;">
         <div class="col-xl-4 col-12" id="logo-holder" style="height: 4rem"></div>
         <div class="col-xl-4 col-6">
@@ -52,12 +72,16 @@
         </div>
 
         <div class="col-xl-4 col-8">
-            <p>
-                <input id="color" type="color" value="@($"#{_colorPicker:x6}")" onchange="@SetColorPicker"/>
-                is <input id="color-dec" type="number" width="10ex" value="@_colorPicker" onchange="@SetColorPicker"/>
-            </p>
             <textarea id="json" class="form-control" style="font-family:monospace" rows="16"></textarea>
             <button class="btn btn-primary" @onclick="PreviewFile" style="width:100%; margin-top:0.5rem">Validate and Render</button>
+            <div style="display: flex; margin: 0.5ex; gap: 0.5ex">
+                <b>Color picker</b>
+                <input hidden id="color" type="color" value="@($"#{_colorPicker:x6}")" onchange="@SetColorPicker"/>
+                <div id="color-preview"
+                     style="background: @($"#{_colorPicker:x6}"); width: 10ex; border: black .1ex solid;"
+                     onclick="document.getElementById('color').click()"></div>
+                <input id="color-dec" type="number" width="10ex" value="@_colorPicker" onchange="@SetColorPicker"/>
+            </div>
         </div>
 
         <div class="col-xl-6 col-12">
@@ -128,7 +152,9 @@
                             <li><a style="background:aqua; color:gray;" class="dropdown-item" href="#" onclick="@SetBackgroundColor(WatchColor.Aqua)">Aqua</a></li>
                         </ul>
                     </div>
-                    <br/>
+                </div>
+                <div>
+                    Old image:
                     <input type="checkbox" id="keep-foreground" value="@_generateKeepForeground" onchange="@SetKeepForeground"/>
                     X: <input style="width: 25%" type="number" id="position-a" value="@_generatePositionA" onchange="@SetPositionA"/>
                     Y: <input style="width: 25%" type="number" id="position-b" value="@_generatePositionB" onchange="@SetPositionB"/>
@@ -180,16 +206,15 @@
         WriteIndented = true,
     };
 
-    private static readonly Image<Argb32> EmptyImage = new(176, 176);
+    private static readonly Bitmap EmptyImage = new(176, 176);
     private static readonly string EmptyImagePreview = EmptyImage.ToBase64String(WebpFormat.Instance);
     private string _name = string.Empty;
-    private List<Image<Argb32>> _images = new() { EmptyImage };
+    private List<Bitmap> _images = new() { EmptyImage };
 
     private List<string> _renderedImages = new() { EmptyImagePreview };
-    private WatchFace _parameters = new();
 
     private string _generateText = "Text";
-    private Image<Argb32> _generatedImage;
+    private Bitmap _generatedImage;
     private string _generatedImagePreview = EmptyImagePreview;
     private int _colorPicker;
     private int _generateImageId;
@@ -230,17 +255,18 @@
     {
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("window.initCodeMirror");
+            await JsRuntime.InvokeVoidAsync("initCodeMirror");
         }
     }
 
     private ValueTask<string> GetJsonAsync()
     {
-        return JsRuntime.InvokeAsync<string>("window.codeMirrorEditor.getValue");
+        return JsRuntime.InvokeAsync<string>("codeMirrorEditor.getValue");
     }
 
     private async Task LoadFile(InputFileChangeEventArgs args)
     {
+        var modal = await JsRuntime.InvokeAsync<IJSObjectReference>("showModal", "loadingModal");
         _name = args.File.Name;
         _preview = EmptyImagePreview;
 
@@ -248,75 +274,91 @@
         {
             var buffer = new byte[args.File.Size];
             await using var stream = args.File.OpenReadStream();
-            await stream.ReadAsync(buffer);
+            await stream.ReadExactlyAsync(buffer);
             using var memory = new MemoryStream(buffer);
             var reader = new Reader(memory);
             reader.Read();
-            _images = new List<Image<Argb32>>(reader.Images);
+            _images = new List<Bitmap>(reader.Images);
             _renderedImages = new List<string>(reader.Images.Select(i => i.ToBase64String(WebpFormat.Instance)));
-            _parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
 
-            await JsRuntime.InvokeVoidAsync("window.codeMirrorEditor.setValue", JsonSerializer.Serialize(_parameters, JsonOptions));
+            var parameters = ParametersConverter.Parse<WatchFace>(reader.Parameters);
+            await JsRuntime.InvokeVoidAsync("codeMirrorEditor.setValue", JsonSerializer.Serialize(parameters, JsonOptions));
+            await DoPreviewFile();
         }
         catch (Exception e)
         {
             await JsRuntime.InvokeVoidAsync("alert", e.ToString());
             throw;
         }
+        finally
+        {
+            await JsRuntime.InvokeVoidAsync("closeModal", modal);
+        }
     }
 
     private async Task PreviewFile(MouseEventArgs arg)
     {
-        _preview = EmptyImagePreview;
+        var modal = await JsRuntime.InvokeAsync<IJSObjectReference>("showModal", "loadingModal");
+        await Task.Yield();
 
         try
         {
-            _parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
-                          ?? throw new InvalidOperationException("Json error!");
-
-            var parameters = ParametersConverter.Build(_parameters);
-            var image = PreviewGenerator.CreateImage(parameters, _images.ToArray(), new()
-            {
-                Time = _sampleTime,
-                BatteryLevel = _sampleBattery,
-                Alarm = _sampleAlarm,
-                Bluetooth = _sampleBluetooth,
-                Calories = _sampleCalories,
-                Distance = _sampleDistance,
-                Goal = _sampleGoal,
-                Pulse = _samplePulse,
-                Steps = _sampleSteps,
-                Unlocked = _sampleUnlocked,
-                AirQuality = _sampleAirQuality,
-                AirQualityIndex = _sampleAirQualityIndex,
-                DoNotDisturb = _sampleNotDisturb,
-                CurrentWeather = _sampleWeather,
-                CurrentTemperature = _sampleTemperatureNow,
-                DayTemperature = _sampleTemperatureDay,
-                NightTemperature = _sampleTemperatureNight,
-                TomorrowDayTemperature = _sampleTemperatureTomDay,
-                TomorrowNightTemperature = _sampleTemperatureTomNight,
-            });
-            _preview = image.Bitmap.ToBase64String(WebpFormat.Instance);
+            await DoPreviewFile();
         }
         catch (Exception e)
         {
             await JsRuntime.InvokeVoidAsync("alert", e.ToString());
             throw;
         }        
+        finally
+        {
+            await JsRuntime.InvokeVoidAsync("closeModal", modal);
+        }
+    }
+
+    private async Task DoPreviewFile()
+    {
+        var parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
+                      ?? throw new InvalidOperationException("Json error!");
+
+        var image = PreviewGenerator.CreateImage(ParametersConverter.Build(parameters), _images.ToArray(), new()
+        {
+            Time = _sampleTime,
+            BatteryLevel = _sampleBattery,
+            Alarm = _sampleAlarm,
+            Bluetooth = _sampleBluetooth,
+            Calories = _sampleCalories,
+            Distance = _sampleDistance,
+            Goal = _sampleGoal,
+            Pulse = _samplePulse,
+            Steps = _sampleSteps,
+            Unlocked = _sampleUnlocked,
+            AirQuality = _sampleAirQuality,
+            AirQualityIndex = _sampleAirQualityIndex,
+            DoNotDisturb = _sampleNotDisturb,
+            CurrentWeather = _sampleWeather,
+            CurrentTemperature = _sampleTemperatureNow,
+            DayTemperature = _sampleTemperatureDay,
+            NightTemperature = _sampleTemperatureNight,
+            TomorrowDayTemperature = _sampleTemperatureTomDay,
+            TomorrowNightTemperature = _sampleTemperatureTomNight,
+        });
+
+        _preview = image.Bitmap.ToBase64String(WebpFormat.Instance);
     }
 
     private async Task SaveFile(MouseEventArgs arg)
     {
+        var modal = await JsRuntime.InvokeAsync<IJSObjectReference>("showModal", "loadingModal");
         try
         {
-            _parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
+            var parameters = JsonSerializer.Deserialize<WatchFace>(await GetJsonAsync(), JsonOptions)
                           ?? throw new InvalidOperationException("Json error!");
 
             using var memory = new MemoryStream();
             var images = _images.Select(i => new Image(i)).ToList<IResource>();
             var writer = new Writer(memory, images);
-            writer.Write(ParametersConverter.Build(_parameters));
+            writer.Write(ParametersConverter.Build(parameters));
             var bytes = memory.ToArray().Select(value => (int)value).ToList();
             await JsRuntime.InvokeVoidAsync("doSaveFile", _name, bytes);
         }
@@ -324,6 +366,10 @@
         {
             await JsRuntime.InvokeVoidAsync("alert", e.ToString());
             throw;
+        }
+        finally
+        {
+            await JsRuntime.InvokeVoidAsync("closeModal", modal);
         }
     }
 
@@ -483,7 +529,7 @@
             bgColor = Color.FromRgb((int)color);
         }
 
-        _generatedImage = new Image<Argb32>(_generatePositionW, _generatePositionH, bgColor);
+        _generatedImage = new Bitmap(_generatePositionW, _generatePositionH, bgColor);
 
         if (_generateFont != null)
         {
@@ -507,7 +553,15 @@
     private void SaveImage()
     {
         DoGenerateImage();
-        _images[_generateImageId] = _generatedImage;
+
+        var clone = new Bitmap(_generatedImage.Width, _generatedImage.Height, PixelFormat.Format32bppArgb);
+        clone.Mutate(gr =>
+        {
+            gr.DrawImage(_generatedImage, new Rectangle(0, 0, clone.Width, clone.Height));
+        });
+
+        FloydSteinbergDitherer.Process(clone);
+        _images[_generateImageId] = clone;
         _renderedImages[_generateImageId] = _generatedImagePreview;
         StateHasChanged();
     }
@@ -519,8 +573,15 @@
             try
             {
                 await using var stream = args.File.OpenReadStream();
-                _images[currentIndex] = await SixLabors.ImageSharp.Image.LoadAsync<Argb32>(stream);
-                _renderedImages[currentIndex] = _images[currentIndex].ToBase64String(WebpFormat.Instance);
+                var image = _images[currentIndex] = await SixLabors.ImageSharp.Image.LoadAsync<Argb32>(stream);
+                var clone = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
+                clone.Mutate(gr =>
+                {
+                    gr.DrawImage(image, new Rectangle(0, 0, clone.Width, clone.Height));
+                });
+
+                FloydSteinbergDitherer.Process(image);
+                _renderedImages[currentIndex] = image.ToBase64String(WebpFormat.Instance);
             }
             catch (Exception e)
             {

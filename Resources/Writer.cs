@@ -31,11 +31,18 @@ namespace Resources
                 var offsetBytes = BitConverter.GetBytes(offset);
                 offsetBytes.CopyTo(offsetsTable, i * OffsetTableItemLength);
 
-                var encodedImage = new MemoryStream();
-                Logger.Debug("Encoding resource {0}...", i);
-                resources[i].WriteTo(encodedImage);
-                offset += (uint) encodedImage.Length;
-                encodedResources[i] = encodedImage;
+                try
+                {
+                    var encodedImage = new MemoryStream();
+                    Logger.Debug("Encoding resource {0}...", i);
+                    resources[i].WriteTo(encodedImage);
+                    offset += (uint) encodedImage.Length;
+                    encodedResources[i] = encodedImage;
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Unable to encode image #{i}", e);
+                }
             }
 
             Logger.Trace("Writing resources offsets table");
