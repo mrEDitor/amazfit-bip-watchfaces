@@ -124,8 +124,8 @@
                 <h5 class="modal-title">Generate image #@_generateImageId</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(8, 1fr); gap: 8px;">
-                <div style="grid-row: span 4 / span 4; display: flex; justify-content: center; align-items: center;">
+            <div class="modal-body" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(9, 1fr); gap: 8px;">
+                <div style="grid-row: span 5 / span 5; display: flex; justify-content: center; align-items: center;">
                     <img id="texture-preview" src="@_generatedImagePreview" alt="generating" style="outline: 4px deeppink dotted"/>
                 </div>
 
@@ -137,7 +137,7 @@
                     H: <input style="width: 25%" type="number" id="position-h" value="@_generatePositionH" onchange="@SetPositionH"/>
                 </div>
                 <div>
-                    Background:
+                    <div>Background:</div>
                     <div style="width: 25%" class="btn-group dropdown">
                         <button style="background:@(_generateBackgroundColor ?? WatchColor.White); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@(_generateBackgroundColor?.ToString() ?? "None")</button>
                         <ul class="dropdown-menu">
@@ -154,13 +154,15 @@
                     </div>
                 </div>
                 <div>
-                    Old image:
-                    <input type="checkbox" id="keep-foreground" value="@_generateKeepForeground" onchange="@SetKeepForeground"/>
+                    <div>
+                        <input type="checkbox" id="keep-foreground" value="@_generateKeepForeground" onchange="@SetKeepForeground"/>
+                        Old image:
+                    </div>
                     X: <input style="width: 25%" type="number" id="position-a" value="@_generatePositionA" onchange="@SetPositionA"/>
                     Y: <input style="width: 25%" type="number" id="position-b" value="@_generatePositionB" onchange="@SetPositionB"/>
                 </div>
                 <div>
-                    Text color:
+                    <div>Text color:</div>
                     <div style="width: 25%" class="btn-group dropdown">
                         <button style="background:@(_generateForegroundColor); color:gray;" type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@_generateForegroundColor</button>
                         <ul class="dropdown-menu">
@@ -176,10 +178,9 @@
                     </div>
                 </div>
                 <div>
-                    <span style="@(_generateFont == null ? "color: red; animation: blink 1s ease infinite;" : "")">Font:</span>
+                    <div style="@(_generateFont == null ? "color: red; animation: blink 1s ease infinite;" : "")">Font:</div>
                     <InputFile id="font" OnChange="LoadFont" style="width: 40%"/>
-                    <br/>
-                    Size: <input style="width: 25%" type="number" id="font-size" value="@_generateFontSize" onchange="@SetFontSize"/>
+                    <input style="width: 25%" type="number" id="font-size" value="@_generateFontSize" onchange="@SetFontSize"/>
                 </div>
 
                 <textarea id="generator-text" class="form-control" style="grid-row: span 4 / span 4; grid-column: span 2 / span 2; width:100%" onchange="@UpdateGenerateText">@_generateText</textarea>
@@ -526,7 +527,9 @@
         var bgColor = Color.FromArgb(0);
         if (_generateBackgroundColor is { } color)
         {
-            bgColor = Color.FromRgb((int)color);
+            bgColor = Color.FromRgb(((int)color & 0xFF0000) >> 16
+                                    | ((int)color & 0x00FF00)
+                                    | ((int)color & 0x0000FF) << 16);
         }
 
         _generatedImage = new Bitmap(_generatePositionW, _generatePositionH, bgColor);
