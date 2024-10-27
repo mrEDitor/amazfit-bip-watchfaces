@@ -80,7 +80,7 @@
                 <div id="color-preview"
                      style="background: @($"#{_colorPicker:x6}"); width: 10ex; border: black .1ex solid;"
                      onclick="document.getElementById('color').click()"></div>
-                <input id="color-dec" type="number" width="10ex" value="@_colorPicker" onchange="@SetColorPicker"/>
+                <input id="color-dec" type="number" width="10ex" value="@(_colorPicker*256)" onchange="@SetColorPicker"/>
             </div>
         </div>
 
@@ -216,7 +216,7 @@
     private string _generateText = "Text";
     private Bitmap _generatedImage;
     private string _generatedImagePreview = EmptyImagePreview;
-    private int _colorPicker;
+    private uint _colorPicker;
     private int _generateImageId;
     private bool _generateKeepForeground;
     private int _generatePositionX;
@@ -449,8 +449,8 @@
     {
         var value = (string)arg.Value!;
         var parsed = value.StartsWith('#')
-            ? int.TryParse(value[1..], NumberStyles.HexNumber, null, out var colorPicker)
-            : int.TryParse(value, out colorPicker);
+            ? uint.TryParse(value[1..], NumberStyles.HexNumber, null, out var colorPicker)
+            : uint.TryParse(value, out colorPicker);
 
         Console.WriteLine(value);
         if (parsed && _colorPicker != colorPicker)
